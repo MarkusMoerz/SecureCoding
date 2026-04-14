@@ -9,7 +9,7 @@ term_handler() {
 # Trap termination signals
 trap 'term_handler' INT TERM
 
-gcc /app/generate_hashed_users.c /app/hash_utils.c -o /app/generate -lssl -lscrypto
+gcc /app/generate_hashed_users.c /app/hash_utils.c -o /app/generate -lssl -lcrypto
 
 /app/generate
 
