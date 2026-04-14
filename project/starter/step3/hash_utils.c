@@ -42,17 +42,3 @@ void generate_salt(unsigned char* salt, size_t length) {
         salt[i] = (unsigned char)(rand() % 256);
     }
 }
-
-void hex_to_bytes(const char *hex, unsigned char *output, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        char byte_str[3];
-        
-        // Take two hex characters at a time
-        byte_str[0] = hex[i * 2];
-        byte_str[1] = hex[i * 2 + 1];
-        byte_str[2] = '\0';
-
-        // Convert hex pair to a byte
-        output[i] = (unsigned char) strtol(byte_str, NULL, 16);
-    }
-}

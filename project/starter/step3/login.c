@@ -37,26 +37,30 @@ int check_login(const char* username, const char* password) {
         // Remove the newline character
         trim_newline(line);
 
-        // Split the line into username and password
         char* token = strtok(line, ":");
-        if (token != NULL) {
-            strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
-            file_username[MAX_USERNAME_LENGTH - 1] = '\0';
-            token = strtok(NULL, ":");
-            if (token != NULL) {
-                strncpy(salt_hex, token, sizeof(salt_hex) - 1);
-                salt_hex[sizeof(salt_hex) - 1] = '\0';
-                token = strtok(NULL, ":");
-                if (token != NULL) {
-                    strncpy(stored_hash, token, MAX_HASH_LENGTH - 1);
-                    stored_hash[MAX_HASH_LENGTH - 1] = '\0';
-                } else continue;
-            } else continue;
-        } else continue;
+        if (token == NULL) continue;
+
+        strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
+        file_username[MAX_USERNAME_LENGTH - 1] = '\0';
+
+        token = strtok(NULL, ":");
+        if (token == NULL) continue;
+
+        strncpy(salt_hex, token, sizeof(salt_hex) - 1);
+        salt_hex[sizeof(salt_hex) - 1] = '\0';
+
+        token = strtok(NULL, ":");
+        if (token == NULL) continue;
+
+        strncpy(stored_hash, token, MAX_HASH_LENGTH - 1);
+        stored_hash[MAX_HASH_LENGTH - 1] = '\0';
 
         unsigned char salt[SALT_LENGTH];
-        hex_to_bytes(salt_hex, salt, SALT_LENGTH);
+        for (int i = 0; i < SALT_LENGTH; i++) {
+            sscanf(&salt_hex[i * 2], "%2hhx", &salt[i]);
+        }
 
+        // Hash input password with salt
         char computed_hash[MAX_HASH_LENGTH];
         hash_password(password, salt, computed_hash);         
         
