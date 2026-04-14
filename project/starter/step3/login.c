@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "hash_utils.h"
 
 #define MAX_LINE_LENGTH 200
 #define MAX_USERNAME_LENGTH 50
 #define MAX_PASSWORD_LENGTH 50
 #define MAX_COMMAND_LENGTH 50
-#define FILE_USERS "users.txt"
+#define MAX_HASH_LENGTH 65
+#define SALT_LENGTH 2
+
+#define FILE_USERS "hashed_users.txt"
 
 // Function to trim newline characters
 void trim_newline(char* str) {
@@ -20,13 +24,14 @@ int check_login(const char* username, const char* password) {
 
     FILE* file = fopen(FILE_USERS, "r");
     if (file == NULL) {
-        printf("Could not open users.txt\n");
+        printf("Could not open hashed_users.txt\n");
         return 0;
     }
 
     char line[MAX_LINE_LENGTH];
     char file_username[MAX_USERNAME_LENGTH];
-    char file_password[MAX_PASSWORD_LENGTH];
+    char salt_hex[SALT_LENGTH * 2 + 1];
+    char stored_hash[MAX_HASH_LENGTH];
 
     while (fgets(line, sizeof(line), file)) {
         // Remove the newline character
@@ -35,15 +40,29 @@ int check_login(const char* username, const char* password) {
         // Split the line into username and password
         char* token = strtok(line, ":");
         if (token != NULL) {
-            strcpy(file_username, token);
+            strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
+            file_username[MAX_USERNAME_LENGTH - 1] = '\0';
             token = strtok(NULL, ":");
             if (token != NULL) {
-                strcpy(file_password, token);
-            }
-        }
+                strncpy(salt_hex, token, sizeof(salt_hex) - 1);
+                salt_hex[sizeof(salt_hex) - 1] = '\0';
+                token = strtok(NULL, ":");
+                if (token != NULL) {
+                    strncpy(stored_hash, token, MAX_HASH_LENGTH - 1);
+                    stored_hash[MAX_HASH_LENGTH - 1] = '\0';
+                } else continue;
+            } else continue;
+        } else continue;
+
+        unsigned char salt[SALT_LENGTH];
+        hex_to_bytes(salt_hex, salt, SALT_LENGTH);
+
+        char computed_hash[MAX_HASH_LENGTH];
+        hash_password(password, salt, computed_hash);         
+        
 
         // Compare entered username and password with the file's values
-        if (strcmp(username, file_username) == 0 && strcmp(password, file_password) == 0) {
+        if (strcmp(username, file_username) == 0 && strcmp(computed_hash, stored_hash) == 0) {
             fclose(file);
             return 1;  // Login successful
         }
