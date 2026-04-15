@@ -11,12 +11,50 @@
 #define SALT_LENGTH 2
 
 #define FILE_USERS "hashed_users.txt"
+#define TEMP_FILE "temp.txt"
 
 // Function to trim newline characters
 void trim_newline(char* str) {
     char* pos;
     if ((pos = strchr(str, '\n')) != NULL)
         *pos = '\0';
+}
+
+void update_counter(const char* username, int new_counter) {
+    FILE *file = fopen(FILE_USERS, "r");
+    FILE *temp = fopen(TEMP_FILE, "w");
+
+    char line[MAX_LINE_LENGTH];
+    char file_username[MAX_USERNAME_LENGTH];
+
+    while (fgets(line, sizeof(line), file)) {
+        char original[MAX_LINE_LENGTH];
+        strcpy(original, line);
+
+        trim_newline(line);
+
+        char* token = strtok(line, ":");
+        if (token != NULL) {
+            strcpy(file_username, token);
+
+            if (strcmp(username, file_username) == 0) {
+                // rewrite line with updated counter
+                char *salt = strtok(NULL, ":");
+                char *hash = strtok(NULL, ":");
+
+                fprintf(temp, "%s:%s:%s:%d\n", file_username, salt, hash, new_counter);
+                continue;
+            }
+        }
+
+        fputs(original, temp);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    remove(FILE_USERS);
+    rename(TEMP_FILE, FILE_USERS);
 }
 
 // Function to check if username and password match an entry in users.txt
@@ -32,28 +70,35 @@ int check_login(const char* username, const char* password) {
     char file_username[MAX_USERNAME_LENGTH];
     char salt_hex[SALT_LENGTH * 2 + 1];
     char stored_hash[MAX_HASH_LENGTH];
+    int counter = 0;
 
     while (fgets(line, sizeof(line), file)) {
         // Remove the newline character
         trim_newline(line);
 
         char* token = strtok(line, ":");
-        if (token == NULL) continue;
-
-        strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
-        file_username[MAX_USERNAME_LENGTH - 1] = '\0';
+        if (!token) continue;
+        strcpy(file_username, token);
 
         token = strtok(NULL, ":");
-        if (token == NULL) continue;
-
-        strncpy(salt_hex, token, sizeof(salt_hex) - 1);
-        salt_hex[sizeof(salt_hex) - 1] = '\0';
+        if (!token) continue;
+        strcpy(salt_hex, token);
 
         token = strtok(NULL, ":");
-        if (token == NULL) continue;
+        if (!token) continue;
+        strcpy(stored_hash, token);
 
-        strncpy(stored_hash, token, MAX_HASH_LENGTH - 1);
-        stored_hash[MAX_HASH_LENGTH - 1] = '\0';
+        token = strtok(NULL, ":");
+        if (!token) continue;
+        counter = atoi(token);
+
+        if (strcmp(username, file_username) != 0)
+            continue;
+
+        if (counter >= 3) {
+            printf("Account locked. Try again in 5 seconds...\n");
+            sleep(5);
+        }
 
         unsigned char salt[SALT_LENGTH];
         for (int i = 0; i < SALT_LENGTH; i++) {
@@ -66,10 +111,16 @@ int check_login(const char* username, const char* password) {
         
 
         // Compare entered username and password with the file's values
-        if (strcmp(username, file_username) == 0 && strcmp(computed_hash, stored_hash) == 0) {
+        if (strcmp(computed_hash, stored_hash) == 0) {
+            update_counter(username, 0);
             fclose(file);
             return 1;  // Login successful
         }
+        counter++;
+        update_counter(username, counter);
+
+        fclose(file);
+        return 0;
     }
 
     fclose(file);
@@ -97,7 +148,7 @@ int main() {
         // Command prompt loop
         while (1) {
             printf("> ");
-            scanf("%s", command);
+            scanf("%49s", command);
 
             if (strcmp(command, "exit") == 0) {
                 break;
