@@ -96,7 +96,7 @@ int check_login(const char* username, const char* password) {
         if (strcmp(username, file_username) != 0)
             continue;
 
-        if (counter >= 3) {
+        if (counter >= 2) {
             printf("Account locked. Try again in 5 seconds...\n");
             sleep(5);
         }
