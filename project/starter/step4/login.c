@@ -30,7 +30,8 @@ void update_counter(const char* username, int new_counter) {
 
     while (fgets(line, sizeof(line), file)) {
         char original[MAX_LINE_LENGTH];
-        strcpy(original, line);
+        strncpy(original, line, sizeof(original) - 1);
+        original[sizeof(original) - 1] = '\0';
 
         trim_newline(line);
 
