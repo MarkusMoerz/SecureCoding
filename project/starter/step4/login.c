@@ -101,11 +101,6 @@ int check_login(const char* username, const char* password) {
         if (strcmp(username, file_username) != 0)
             continue;
 
-        if (counter >= 2) {
-            printf("Account locked. Try again in 5 seconds...\n");
-            sleep(5);
-        }
-
         unsigned char salt[SALT_LENGTH];
         for (int i = 0; i < SALT_LENGTH; i++) {
             sscanf(&salt_hex[i * 2], "%2hhx", &salt[i]);
@@ -123,6 +118,10 @@ int check_login(const char* username, const char* password) {
             return 1;  // Login successful
         }
         counter++;
+        if (counter >= 3) {
+            printf("Account locked. Try again in 5 seconds...\n");
+            sleep(5);
+        }
         update_counter(username, counter);
 
         fclose(file);
