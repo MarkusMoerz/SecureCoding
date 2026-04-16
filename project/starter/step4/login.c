@@ -36,7 +36,8 @@ void update_counter(const char* username, int new_counter) {
 
         char* token = strtok(line, ":");
         if (token != NULL) {
-            strcpy(file_username, token);
+            strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
+            file_username[MAX_USERNAME_LENGTH - 1] = '\0';
 
             if (strcmp(username, file_username) == 0) {
                 // rewrite line with updated counter
@@ -79,15 +80,18 @@ int check_login(const char* username, const char* password) {
 
         char* token = strtok(line, ":");
         if (!token) continue;
-        strcpy(file_username, token);
+        strncpy(file_username, token, MAX_USERNAME_LENGTH - 1);
+        file_username[MAX_USERNAME_LENGTH - 1] = '\0';
 
         token = strtok(NULL, ":");
         if (!token) continue;
-        strcpy(salt_hex, token);
+        strncpy(salt_hex, token, sizeof(salt_hex) - 1);
+        salt_hex[sizeof(salt_hex) - 1] = '\0';
 
         token = strtok(NULL, ":");
         if (!token) continue;
-        strcpy(stored_hash, token);
+        strncpy(stored_hash, token, MAX_HASH_LENGTH - 1);
+        stored_hash[MAX_HASH_LENGTH - 1] = '\0';
 
         token = strtok(NULL, ":");
         if (!token) continue;
@@ -137,10 +141,18 @@ int main() {
     printf("Enter username: ");
     fgets(username, sizeof(username), stdin);
     trim_newline(username);  // Remove newline character
+    if (strlen(username) >= MAX_USERNAME_LENGTH) {
+        printf("Username too long!\n");
+        exit(EXIT_FAILURE);
+    }
 
     printf("Enter password: ");
     fgets(password, sizeof(password), stdin);
     trim_newline(password);  // Remove newline character
+    if (strlen(password) >= MAX_PASSWORD_LENGTH) {
+        printf("Password too long!\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Check login credentials
     if (check_login(username, password)) {
