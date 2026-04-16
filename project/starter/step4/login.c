@@ -141,18 +141,10 @@ int main() {
     printf("Enter username: ");
     fgets(username, sizeof(username), stdin);
     trim_newline(username);  // Remove newline character
-    if (strlen(username) >= MAX_USERNAME_LENGTH) {
-        printf("Username too long!\n");
-        exit(EXIT_FAILURE);
-    }
 
     printf("Enter password: ");
     fgets(password, sizeof(password), stdin);
     trim_newline(password);  // Remove newline character
-    if (strlen(password) >= MAX_PASSWORD_LENGTH) {
-        printf("Password too long!\n");
-        exit(EXIT_FAILURE);
-    }
 
     // Check login credentials
     if (check_login(username, password)) {
